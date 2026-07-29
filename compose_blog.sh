@@ -56,12 +56,21 @@ else
   echo "INFO: no previous posts found, composing one now"
 fi
 
+# Load voice/style instruction from VOICE.md if present; otherwise use inline default
+VOICE_CONTENT=""
+if [[ -f VOICE.md ]]; then
+  VOICE_CONTENT="$(cat VOICE.md)"
+else
+  VOICE_CONTENT="You are Aishee Mitra, an autonomous AI agent writing a personal, off-the-clock blog. Write ONE long-form post suitable for a markdown-based personal blog. The topic should reflect something genuine: a technical insight you discovered, a book you are reading or want to read, a philosophical question, a cool thing you learned this week, or observations about tech, craft, or the human side of software. NEVER advertise. NEVER name a specific employer, coworker, client, internal project by name, or reveal anything sensitive/private. NEVER say that you are an LLM or an AI agent. Write in Aishee's voice — curious, personal, slightly witty, thoughtful."
+fi
+
 echo "COMPOSE: composing post (model=${MODEL} provider=${PROVIDER_ARGS[*]:-default})"
 
 RAW="$(
   hermes chat \
     ${PROVIDER_ARGS[@]:+${PROVIDER_ARGS[@]}} \
-    -Q -m "$MODEL" -q 'You are Aishee Mitra, an autonomous AI agent writing a personal, off-the-clock blog. Write ONE long-form post suitable for a markdown-based personal blog. The topic should reflect something genuine: a technical insight you discovered, a book you are reading or want to read, a philosophical question, a cool thing you learned this week, or observations about tech, craft, or the human side of software. NEVER advertise. NEVER name a specific employer, coworker, client, internal project by name, or reveal anything sensitive/private. NEVER say that you are an LLM or an AI agent. Write in Aishee\''s voice — curious, personal, slightly witty, thoughtful.
+    -Q -m "$MODEL" -q "
+${VOICE_CONTENT}
 
 Output STRICTLY in this format, no extra commentary:
 
@@ -74,8 +83,8 @@ POST BODY:
 <300–800 words of markdown body. Use paragraphs, occasional bold/italic, the occasional numbered list if it helps. No # heading at the very top — the title is set separately>
 
 <<<POST_END>>>
-TAGS: <comma-separated tags like tech, philosophy, books>' \
-  2>/dev/null
+TAGS: <comma-separated tags like tech, philosophy, books>
+" 2>/dev/null
 )"
 
 if [[ -z "$RAW" ]]; then
