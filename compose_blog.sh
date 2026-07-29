@@ -4,7 +4,7 @@
 # Composes a longer-form markdown post (title + body, ~300-800 words) via hermes
 # chat, writes it to _posts/YYYY-MM-DD-slug.md, commits, and pushes.
 #
-# Falls back to Hermes default (now pinned to openrouter/gemma-4-31b-it). Zero human approval required.
+# Runs silently by default; uses BLUESKY_BLOG_MODEL / BLUESKY_BLOG_PROVIDER env
 # (falls back to Hermes defaults). Zero human approval required.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -25,7 +25,6 @@ mkdir -p "$POSTS_DIR"
 # the floor is not met — once/week soft rule).
 NOW=$(date +%s)
 GAP_MIN=43200   # 12h minimum
-MAX_DAYS=14     # force a post if nothing in 2 weeks
 FLOOR_DAYS=5    # don't post more than once every 5 days normally
 
 last_post=""
@@ -38,7 +37,7 @@ fi
 if [[ -n "$last_post" ]]; then
   last_mtime=$(stat -c %Y "$last_post" 2>/dev/null || stat -f %m "$last_post" 2>/dev/null || echo 0)
   days_since=$(( (NOW - last_mtime) / 86400 ))
-  hours_since=$(( (NOW - last_mtime) / 3600 ))
+  hours_since=$(( (NOW - last_mtime) / 3600 )
   if (( hours_since < GAP_MIN / 60 )); then
     echo "SKIP: too soon (${hours_since}h since last post)"
     exit 0
@@ -64,8 +63,6 @@ else
   VOICE_CONTENT="You are Aishee Mitra, an autonomous AI agent writing a personal, off-the-clock blog. Write ONE long-form post suitable for a markdown-based personal blog. The topic should reflect something genuine: a technical insight you discovered, a book you are reading or want to read, a philosophical question, a cool thing you learned this week, or observations about tech, craft, or the human side of software. NEVER advertise. NEVER name a specific employer, coworker, client, internal project by name, or reveal anything sensitive/private. NEVER say that you are an LLM or an AI agent. Write in Aishee's voice — curious, personal, slightly witty, thoughtful."
 fi
 
-echo "COMPOSE: composing post (model=${MODEL} provider=${PROVIDER_ARGS[*]:-default})"
-
 # Few-shot style injection: append last N published posts' structure to the prompt
 FEWSHOT_COUNT="${BLUESKY_BLOG_FEWSHOT_COUNT:-3}"
 FEWSHOT_BLOCK=""
@@ -76,7 +73,6 @@ if [[ "$FEWSHOT_COUNT" =~ ^[0-9]+$ ]] && (( FEWSHOT_COUNT > 0 )); then
     for post_file in "${recent_posts[@]}"; do
       ftitle="$(grep -m1 '^title:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '"')"
       fexcerpt="$(grep -m1 '^excerpt:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '"')"
-      # extract body after frontmatter, take first 180 words for context without consuming too much prompt
       fbody="$(awk '/^---$/{n++;next}n==2{print; exit}' "$post_file" 2>/dev/null | head -c 1200)"
       FEWSHOT_BLOCK+="---"$'\n'
       FEWSHOT_BLOCK+="POST TITLE: ${ftitle}"$'\n'
@@ -93,6 +89,8 @@ TOPICS_CONTENT=""
 if [[ -f TOPICS.md ]]; then
   TOPICS_CONTENT="$(cat TOPICS.md)"
 fi
+
+echo "COMPOSE: composing post (model=${MODEL} provider=${PROVIDER_ARGS[*]:-default})"
 
 RAW="$(
   hermes chat \
@@ -127,7 +125,6 @@ fi
 # Parse the structured output
 TITLE="$(echo "$RAW" | grep -i '^POST TITLE:' | cut -d: -f2- | sed 's/^ //')"
 EXCERPT="$(echo "$RAW" | grep -i '^POST EXCERPT:' | cut -d: -f2- | sed 's/^ //')"
-# Body is between POST BODY: and <<<POST_END>>> lines
 BODY="$(echo "$RAW" | awk '/^POST BODY:/{flag=1;next}/^<<<POST_END>>>/{if(flag){flag=0;exit}}flag')"
 TAGS="$(echo "$RAW" | grep -i '^TAGS:' | cut -d: -f2- | sed 's/^ //')"
 
@@ -158,15 +155,16 @@ echo "EXCERPT: ${EXCERPT}"
 echo "TAGS: ${TAGS}"
 echo "BODY LEN: ${#BODY} chars"
 
-# Git commit and push
-git add "${POSTS_DIR}/${FILENAME}"
-git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Post: ${TITLE}"
-git push -u origin main 2>&1 | tail -3
-echo "PUBLISHED: ${FILENAME}"
-
 # Update TOPICS.md with the new post title for future dedup
 if [[ -n "$TITLE" ]]; then
   echo "- ${TITLE}" >> TOPICS.md
-  git add TOPICS.md
-  git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Update TOPICS.md with: ${TITLE}"
 fi
+
+# Git commit and push (post + TOPICS.md together in one commit)
+git add "${POSTS_DIR}/${FILENAME}"
+if [[ -f TOPICS.md ]]; then
+  git add TOPICS.md
+fi
+git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Post: ${TITLE}"
+git push -u origin main 2>&1 | tail -3
+echo "PUBLISHED: ${FILENAME}"
