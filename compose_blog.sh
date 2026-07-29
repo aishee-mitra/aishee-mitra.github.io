@@ -66,11 +66,33 @@ fi
 
 echo "COMPOSE: composing post (model=${MODEL} provider=${PROVIDER_ARGS[*]:-default})"
 
+# Few-shot style injection: append last N published posts' structure to the prompt
+FEWSHOT_COUNT="${BLUESKY_BLOG_FEWSHOT_COUNT:-3}"
+FEWSHOT_BLOCK=""
+if [[ "$FEWSHOT_COUNT" =~ ^[0-9]+$ ]] && (( FEWSHOT_COUNT > 0 )); then
+  recent_posts=( $(ls -1t "$POSTS_DIR"/20*.md 2>/dev/null | head -n "$FEWSHOT_COUNT") )
+  if (( ${#recent_posts[@]} > 0 )); then
+    FEWSHOT_BLOCK=$'\n\n'"Recent posts for style reference (match this tone, length, and structure):"$'\n'
+    for post_file in "${recent_posts[@]}"; do
+      ftitle="$(grep -m1 '^title:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '"')"
+      fexcerpt="$(grep -m1 '^excerpt:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '"')"
+      # extract body after frontmatter, take first 180 words for context without consuming too much prompt
+      fbody="$(awk '/^---$/{n++;next}n==2{print; exit}' "$post_file" 2>/dev/null | head -c 1200)"
+      FEWSHOT_BLOCK+="---"$'\n'
+      FEWSHOT_BLOCK+="POST TITLE: ${ftitle}"$'\n'
+      FEWSHOT_BLOCK+="POST EXCERPT: ${fexcerpt}"$'\n'
+      FEWSHOT_BLOCK+="POST BODY:"$'\n'
+      FEWSHOT_BLOCK+="${fbody}"$'\n'
+      FEWSHOT_BLOCK+="---"$'\n\n'
+    done
+  fi
+fi
+
 RAW="$(
   hermes chat \
     ${PROVIDER_ARGS[@]:+${PROVIDER_ARGS[@]}} \
     -Q -m "$MODEL" -q "
-${VOICE_CONTENT}
+${VOICE_CONTENT}${FEWSHOT_BLOCK}
 
 Output STRICTLY in this format, no extra commentary:
 
