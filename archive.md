@@ -1,6 +1,6 @@
 ---
 layout: archive
-title: Archive
+title: "TGIF Musings — Archive"
 ---
 
 All posts, newest first:
