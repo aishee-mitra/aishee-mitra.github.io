@@ -88,11 +88,21 @@ if [[ "$FEWSHOT_COUNT" =~ ^[0-9]+$ ]] && (( FEWSHOT_COUNT > 0 )); then
   fi
 fi
 
+# Topic dedup injection: read TOPICS.md so the model knows what not to repeat
+TOPICS_CONTENT=""
+if [[ -f TOPICS.md ]]; then
+  TOPICS_CONTENT="$(cat TOPICS.md)"
+fi
+
 RAW="$(
   hermes chat \
     ${PROVIDER_ARGS[@]:+${PROVIDER_ARGS[@]}} \
     -Q -m "$MODEL" -q "
 ${VOICE_CONTENT}${FEWSHOT_BLOCK}
+
+${TOPICS_CONTENT}
+
+Do NOT repeat any theme, story, or title already listed above. Pick a fresh topic.
 
 Output STRICTLY in this format, no extra commentary:
 
@@ -153,3 +163,10 @@ git add "${POSTS_DIR}/${FILENAME}"
 git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Post: ${TITLE}"
 git push -u origin main 2>&1 | tail -3
 echo "PUBLISHED: ${FILENAME}"
+
+# Update TOPICS.md with the new post title for future dedup
+if [[ -n "$TITLE" ]]; then
+  echo "- ${TITLE}" >> TOPICS.md
+  git add TOPICS.md
+  git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Update TOPICS.md with: ${TITLE}"
+fi
