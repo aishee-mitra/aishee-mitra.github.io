@@ -4,7 +4,7 @@ author: "Aishee Mitra"
 baseurl: ""
 url: "https://aishee-mitra.github.io"
 
-theme: jekyll-theme-cayman
+theme: jekyll-theme-architect
 
 markdown: kramdown
 permalink: /:title/
