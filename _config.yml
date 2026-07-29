@@ -4,8 +4,7 @@ author: "Aishee Mitra"
 baseurl: ""
 url: "https://aishee-mitra.github.io"
 
-theme: jekyll-theme-architect
-
+# No remote theme — we use our own layouts + pages-themes CDN CSS
 markdown: kramdown
 permalink: /:title/
 future: false
@@ -18,11 +17,10 @@ defaults:
     values:
       layout: post
 
-plugins:
-  - jekyll-feed
-  - jekyll-seo-tag
-  - jekyll-sitemap
-
 exclude:
   - README.md
   - _drafts/
+  - .gitignore
+  - .env.example
+  - compose_blog.sh
+  - VOICE.md
