@@ -210,3 +210,19 @@ li { margin-bottom: .45em; }
   .archive li:hover { margin: 0; padding-left: 0; padding-right: 0; }
   .archive .date { font-size: .82rem; min-width: unset; }
 }
+
+/* ----- Avatar ----- */
+.avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 2.2rem;
+  display: grid;
+  place-items: center;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
