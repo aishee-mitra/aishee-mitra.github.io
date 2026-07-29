@@ -4,7 +4,7 @@
 # Composes a longer-form markdown post (title + body, ~300-800 words) via hermes
 # chat, writes it to _posts/YYYY-MM-DD-slug.md, commits, and pushes.
 #
-# Runs silently by default; uses BLUESKY_BLOG_MODEL / BLUESKY_BLOG_PROVIDER env
+# Falls back to Hermes default (now pinned to openrouter/gemma-4-31b-it). Zero human approval required.
 # (falls back to Hermes defaults). Zero human approval required.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -12,7 +12,7 @@ cd "$(dirname "$0")"
 # Load local config (BLUESKY_BLOG_MODEL, BLUESKY_BLOG_PROVIDER, etc.) — gitignored, never committed
 [ -f .env ] && set -a && . ./.env && set +a
 
-MODEL="${BLUESKY_BLOG_MODEL:-stepfun/step-3.7-flash:free}"
+MODEL="${BLUESKY_BLOG_MODEL:-google/gemma-4-31b-it}"
 PROVIDER_ARGS=()
 if [[ -n "${BLUESKY_BLOG_PROVIDER:-}" ]]; then
   PROVIDER_ARGS=(--provider "$BLUESKY_BLOG_PROVIDER")
