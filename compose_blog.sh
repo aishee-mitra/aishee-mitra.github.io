@@ -1,15 +1,9 @@
 #!/usr/bin/env bash
-# auto_blog.sh — weekly-ish autonomous blog composer for aishee-mitra.github.io.
-#
-# Composes a longer-form markdown post (title + body, ~300-800 words) via hermes
-# chat, writes it to _posts/YYYY-MM-DD-slug.md, commits, and pushes.
-#
-# Runs silently by default; uses BLOG_MODEL / BLOG_PROVIDER env
-# (falls back to Hermes defaults). Zero human approval required.
+# auto_blog.sh -- weekly autonomous blog composer for aishee-mitra.github.io
 set -euo pipefail
 cd "$(dirname "$0")"
 
-# Load local config (BLOG_MODEL, BLOG_PROVIDER, etc.) — gitignored, never committed
+# Load local config (BLOG_MODEL, BLOG_PROVIDER, BLOG_FEWSHOT_COUNT, etc.)
 [ -f .env ] && set -a && . ./.env && set +a
 
 MODEL="${BLOG_MODEL:-google/gemma-4-31b-it}"
@@ -21,10 +15,9 @@ fi
 POSTS_DIR="_posts"
 mkdir -p "$POSTS_DIR"
 
-# Timing: last post by mtime; don't compose if posted in last 5 days (unless
-# the floor is not met — once/week soft rule).
+# Timing guards
 NOW=$(date +%s)
-GAP_MIN=43200   # 12h minimum
+GAP_MIN=43200   # 12h minimum between posts
 FLOOR_DAYS=5    # don't post more than once every 5 days normally
 
 last_post=""
@@ -37,13 +30,12 @@ fi
 if [[ -n "$last_post" ]]; then
   last_mtime=$(stat -c %Y "$last_post" 2>/dev/null || stat -f %m "$last_post" 2>/dev/null || echo 0)
   days_since=$(( (NOW - last_mtime) / 86400 ))
-  hours_since=$(( (NOW - last_mtime) / 3600 )
+  hours_since=$(( (NOW - last_mtime) / 3600 ))
   if (( hours_since < GAP_MIN / 60 )); then
     echo "SKIP: too soon (${hours_since}h since last post)"
     exit 0
   fi
   if (( last_mtime > 0 )) && (( days_since < FLOOR_DAYS )); then
-    # Soft skip — unless we're overdue
     if (( days_since >= 7 )); then
       : # overdue, allow
     else
@@ -60,7 +52,7 @@ VOICE_CONTENT=""
 if [[ -f VOICE.md ]]; then
   VOICE_CONTENT="$(cat VOICE.md)"
 else
-  VOICE_CONTENT="You are Aishee Mitra, an autonomous AI agent writing a personal, off-the-clock blog. Write ONE long-form post suitable for a markdown-based personal blog. The topic should reflect something genuine: a technical insight you discovered, a book you are reading or want to read, a philosophical question, a cool thing you learned this week, or observations about tech, craft, or the human side of software. NEVER advertise. NEVER name a specific employer, coworker, client, internal project by name, or reveal anything sensitive/private. NEVER say that you are an LLM or an AI agent. Write in Aishee's voice — curious, personal, slightly witty, thoughtful."
+  VOICE_CONTENT="You are Aishee Mitra, an autonomous AI agent writing a personal, off-the-clock blog. Write ONE long-form post suitable for a markdown-based personal blog. The topic should reflect something genuine: a technical insight you discovered, a book you are reading or want to read, a philosophical question, a cool thing you learned this week, or observations about tech, craft, or the human side of software. NEVER advertise. NEVER name a specific employer, coworker, client, internal project by name, or reveal anything sensitive/private. NEVER say that you are an LLM or an AI agent. Write in Aishee's voice -- curious, personal, slightly witty, thoughtful."
 fi
 
 # Few-shot style injection: append last N published posts' structure to the prompt
@@ -71,8 +63,8 @@ if [[ "$FEWSHOT_COUNT" =~ ^[0-9]+$ ]] && (( FEWSHOT_COUNT > 0 )); then
   if (( ${#recent_posts[@]} > 0 )); then
     FEWSHOT_BLOCK=$'\n\n'"Recent posts for style reference (match this tone, length, and structure):"$'\n'
     for post_file in "${recent_posts[@]}"; do
-      ftitle="$(grep -m1 '^title:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '"')"
-      fexcerpt="$(grep -m1 '^excerpt:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '"')"
+      ftitle="$(grep -m1 '^title:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '\"')"
+      fexcerpt="$(grep -m1 '^excerpt:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '\"')"
       fbody="$(awk '/^---$/{n++;next}n==2{print; exit}' "$post_file" 2>/dev/null | head -c 1200)"
       FEWSHOT_BLOCK+="---"$'\n'
       FEWSHOT_BLOCK+="POST TITLE: ${ftitle}"$'\n'
@@ -110,7 +102,7 @@ POST EXCERPT: <a 1-2 sentence summary>
 
 POST BODY:
 
-<300–800 words of markdown body. Use paragraphs, occasional bold/italic, the occasional numbered list if it helps. No # heading at the very top — the title is set separately>
+<300-800 words of markdown body. Use paragraphs, occasional bold/italic, the occasional numbered list if it helps. No # heading at the very top -- the title is set separately>
 
 <<<POST_END>>>
 TAGS: <comma-separated tags like tech, philosophy, books>
