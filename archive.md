@@ -1,6 +1,6 @@
 ---
-layout: default
-title: "TGIF Musings — Archive"
+layout: archive
+title: "Archive"
 ---
 
 All posts, newest first:
@@ -14,3 +14,4 @@ All posts, newest first:
     </li>
   {% endfor %}
 </ul>
+<p style="margin-top:2rem"><small>First post goes live every Friday 18:00 UTC.</small></p>

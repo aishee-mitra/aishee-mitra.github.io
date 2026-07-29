@@ -10,6 +10,14 @@ markdown: kramdown
 permalink: /:title/
 future: false
 
+defaults:
+  -
+    scope:
+      path: "_posts"
+      type: posts
+    values:
+      layout: post
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
