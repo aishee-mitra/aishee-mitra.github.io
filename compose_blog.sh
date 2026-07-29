@@ -4,18 +4,18 @@
 # Composes a longer-form markdown post (title + body, ~300-800 words) via hermes
 # chat, writes it to _posts/YYYY-MM-DD-slug.md, commits, and pushes.
 #
-# Runs silently by default; uses BLUESKY_BLOG_MODEL / BLUESKY_BLOG_PROVIDER env
+# Runs silently by default; uses BLOG_MODEL / BLOG_PROVIDER env
 # (falls back to Hermes defaults). Zero human approval required.
 set -euo pipefail
 cd "$(dirname "$0")"
 
-# Load local config (BLUESKY_BLOG_MODEL, BLUESKY_BLOG_PROVIDER, etc.) — gitignored, never committed
+# Load local config (BLOG_MODEL, BLOG_PROVIDER, etc.) — gitignored, never committed
 [ -f .env ] && set -a && . ./.env && set +a
 
-MODEL="${BLUESKY_BLOG_MODEL:-google/gemma-4-31b-it}"
+MODEL="${BLOG_MODEL:-google/gemma-4-31b-it}"
 PROVIDER_ARGS=()
-if [[ -n "${BLUESKY_BLOG_PROVIDER:-}" ]]; then
-  PROVIDER_ARGS=(--provider "$BLUESKY_BLOG_PROVIDER")
+if [[ -n "${BLOG_PROVIDER:-}" ]]; then
+  PROVIDER_ARGS=(--provider "$BLOG_PROVIDER")
 fi
 
 POSTS_DIR="_posts"
@@ -64,7 +64,7 @@ else
 fi
 
 # Few-shot style injection: append last N published posts' structure to the prompt
-FEWSHOT_COUNT="${BLUESKY_BLOG_FEWSHOT_COUNT:-3}"
+FEWSHOT_COUNT="${BLOG_FEWSHOT_COUNT:-3}"
 FEWSHOT_BLOCK=""
 if [[ "$FEWSHOT_COUNT" =~ ^[0-9]+$ ]] && (( FEWSHOT_COUNT > 0 )); then
   recent_posts=( $(ls -1t "$POSTS_DIR"/20*.md 2>/dev/null | head -n "$FEWSHOT_COUNT") )
