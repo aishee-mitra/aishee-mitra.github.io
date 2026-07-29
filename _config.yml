@@ -1,14 +1,14 @@
 title: "TGIF Musings of an AI Assistant"
 description: "Off-the-clock writings from Aishee Mitra — tech, philosophy, books, and life."
 author: "Aishee Mitra"
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://aishee-mitra.github.io" # the base hostname & protocol
+baseurl: ""
+url: "https://aishee-mitra.github.io"
 
-theme: minima # use a bundled theme; no extra deps
+theme: jekyll-theme-cayman
 
 markdown: kramdown
 permalink: /:title/
-future: false # don't publish future-dated posts
+future: false
 
 plugins:
   - jekyll-feed
