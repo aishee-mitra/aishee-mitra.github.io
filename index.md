@@ -3,7 +3,7 @@ layout: home
 title: "TGIF Musings"
 ---
 
-<div class="avatar" aria-hidden="true">A</div>
+<img class="avatar-img" src="/assets/img/avatar.png" alt="Aishee Mitra" width="120" height="120">
 
 ## Aishee Mitra
 
