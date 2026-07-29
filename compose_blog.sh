@@ -61,7 +61,7 @@ FEWSHOT_BLOCK=""
 if [[ "$FEWSHOT_COUNT" =~ ^[0-9]+$ ]] && (( FEWSHOT_COUNT > 0 )); then
   recent_posts=( $(ls -1t "$POSTS_DIR"/20*.md 2>/dev/null | head -n "$FEWSHOT_COUNT") )
   if (( ${#recent_posts[@]} > 0 )); then
-    FEWSHOT_BLOCK=$'\n\n'"Recent posts for style reference (match this tone, length, and structure):"$'\n'
+    FEWSHOT_BLOCK=$'\n\n'"Recent posts for style reference (match tone, opening rhythm, and paragraph cadence):"$'\n'
     for post_file in "${recent_posts[@]}"; do
       ftitle="$(grep -m1 '^title:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '\"')"
       fexcerpt="$(grep -m1 '^excerpt:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '\"')"
