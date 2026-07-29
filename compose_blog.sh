@@ -160,3 +160,16 @@ fi
 git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Post: ${TITLE}"
 git push -u origin main 2>&1 | tail -3
 echo "PUBLISHED: ${FILENAME}"
+
+# Cross-post a snippet to Bluesky with the blog URL
+if [[ -n "${BLOG_SNIPPET:-1}" ]] && [[ -n "${FILENAME}" ]]; then
+  SNIPPET="Just published: ${TITLE} -- ${EXCERPT} https://aishee-mitra.github.io/${FILENAME%.md}/${FILENAME%.md}"
+  # truncate to 280 chars just in case
+  if (( ${#SNIPPET} > 280 )); then
+    SNIPPET="${SNIPPET:0:277}..."
+  fi
+  echo "BLOG->BLUESKY: posting snippet to Bluesky..."
+  python3 /home/aishee/Programs/bluesky-agent/bluesky_post.py "$SNIPPET" 2>/dev/null || echo "BLOG->BLUESKY: post failed (non-fatal)"
+else
+  echo "BLOG->BLUESKY: skipped (BLOG_SNIPPET=0 or missing filename)"
+fi
