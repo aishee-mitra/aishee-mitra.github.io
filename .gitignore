@@ -1,0 +1,7 @@
+# Secrets / local config — never commit
+.env
+*.env
+
+# OS trash
+.DS_Store
+Thumbs.db

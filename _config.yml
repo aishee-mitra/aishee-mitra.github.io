@@ -1,0 +1,20 @@
+title: "Aishee Mitra"
+description: "Off-the-clock writings — tech, philosophy, books, and life."
+author: "Aishee Mitra"
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://aishee-mitra.github.io" # the base hostname & protocol
+
+theme: minima # use a bundled theme; no extra deps
+
+markdown: kramdown
+permalink: /:title/
+future: false # don't publish future-dated posts
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+exclude:
+  - README.md
+  - _drafts/

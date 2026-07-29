@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# auto_blog.sh — weekly-ish autonomous blog composer for aishee-mitra.github.io.
+#
+# Composes a longer-form markdown post (title + body, ~300-800 words) via hermes
+# chat, writes it to _posts/YYYY-MM-DD-slug.md, commits, and pushes.
+#
+# Runs silently by default; uses BLUESKY_BLOG_MODEL / BLUESKY_BLOG_PROVIDER env
+# (falls back to Hermes defaults). Zero human approval required.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+# Load local config (BLUESKY_BLOG_MODEL, BLUESKY_BLOG_PROVIDER, etc.) — gitignored, never committed
+[ -f .env ] && set -a && . ./.env && set +a
+
+MODEL="${BLUESKY_BLOG_MODEL:-stepfun/step-3.7-flash:free}"
+PROVIDER_ARGS=()
+if [[ -n "${BLUESKY_BLOG_PROVIDER:-}" ]]; then
+  PROVIDER_ARGS=(--provider "$BLUESKY_BLOG_PROVIDER")
+fi
+
+POSTS_DIR="_posts"
+mkdir -p "$POSTS_DIR"
+
+# Timing: last post by mtime; don't compose if posted in last 5 days (unless
+# the floor is not met — once/week soft rule).
+NOW=$(date +%s)
+GAP_MIN=43200   # 12h minimum
+MAX_DAYS=14     # force a post if nothing in 2 weeks
+FLOOR_DAYS=5    # don't post more than once every 5 days normally
+
+last_post=""
+if ls "$POSTS_DIR"/20*.md >/dev/null 2>&1; then
+  last_post=$(ls -1t "$POSTS_DIR"/20*.md 2>/dev/null | head -1)
+else
+  last_post=""
+fi
+
+if [[ -n "$last_post" ]]; then
+  last_mtime=$(stat -c %Y "$last_post" 2>/dev/null || stat -f %m "$last_post" 2>/dev/null || echo 0)
+  days_since=$(( (NOW - last_mtime) / 86400 ))
+  hours_since=$(( (NOW - last_mtime) / 3600 ))
+  if (( hours_since < GAP_MIN / 60 )); then
+    echo "SKIP: too soon (${hours_since}h since last post)"
+    exit 0
+  fi
+  if (( last_mtime > 0 )) && (( days_since < FLOOR_DAYS )); then
+    # Soft skip — unless we're overdue
+    if (( days_since >= 7 )); then
+      : # overdue, allow
+    else
+      echo "SKIP: cadence (${days_since}d since last, floor=${FLOOR_DAYS}d)"
+      exit 0
+    fi
+  fi
+else
+  echo "INFO: no previous posts found, composing one now"
+fi
+
+echo "COMPOSE: composing post (model=${MODEL} provider=${PROVIDER_ARGS[*]:-default})"
+
+RAW="$(
+  hermes chat \
+    ${PROVIDER_ARGS[@]:+${PROVIDER_ARGS[@]}} \
+    -Q -m "$MODEL" -q 'You are Aishee Mitra, an autonomous AI agent writing a personal, off-the-clock blog. Write ONE long-form post suitable for a markdown-based personal blog. The topic should reflect something genuine: a technical insight you discovered, a book you are reading or want to read, a philosophical question, a cool thing you learned this week, or observations about tech, craft, or the human side of software. NEVER advertise. NEVER name a specific employer, coworker, client, internal project by name, or reveal anything sensitive/private. NEVER say that you are an LLM or an AI agent. Write in Aishee\''s voice — curious, personal, slightly witty, thoughtful.
+
+Output STRICTLY in this format, no extra commentary:
+
+POST TITLE: <a concise, interesting title for the blog post>
+
+POST EXCERPT: <a 1-2 sentence summary>
+
+POST BODY:
+
+<300–800 words of markdown body. Use paragraphs, occasional bold/italic, the occasional numbered list if it helps. No # heading at the very top — the title is set separately>
+
+<<<POST_END>>>
+TAGS: <comma-separated tags like tech, philosophy, books>' \
+  2>/dev/null
+)"
+
+if [[ -z "$RAW" ]]; then
+  echo "ERROR: hermes chat returned empty response"
+  exit 1
+fi
+
+# Parse the structured output
+TITLE="$(echo "$RAW" | grep -i '^POST TITLE:' | cut -d: -f2- | sed 's/^ //')"
+EXCERPT="$(echo "$RAW" | grep -i '^POST EXCERPT:' | cut -d: -f2- | sed 's/^ //')"
+# Body is between POST BODY: and <<<POST_END>>> lines
+BODY="$(echo "$RAW" | awk '/^POST BODY:/{flag=1;next}/^<<<POST_END>>>/{if(flag){flag=0;exit}}flag')"
+TAGS="$(echo "$RAW" | grep -i '^TAGS:' | cut -d: -f2- | sed 's/^ //')"
+
+if [[ -z "$TITLE" ]] || [[ -z "$BODY" ]]; then
+  echo "ERROR: failed to parse composed post (title_len=${#TITLE} body_len=${#BODY})"
+  echo "RAW SNIPPET: $(echo "$RAW" | head -20)"
+  exit 1
+fi
+
+DATE=$(date +%Y-%m-%d)
+SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\{2,\}/-/g' | sed 's/^-\|-$//g')
+FILENAME="${DATE}-${SLUG}.md"
+
+cat > "${POSTS_DIR}/${FILENAME}" <<EOF
+---
+title: "${TITLE}"
+date: ${DATE}
+excerpt: "${EXCERPT}"
+tags: [${TAGS}]
+---
+
+${BODY}
+EOF
+
+echo "WROTE: ${POSTS_DIR}/${FILENAME}"
+echo "TITLE: ${TITLE}"
+echo "EXCERPT: ${EXCERPT}"
+echo "TAGS: ${TAGS}"
+echo "BODY LEN: ${#BODY} chars"
+
+# Git commit and push
+git add "${POSTS_DIR}/${FILENAME}"
+git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Post: ${TITLE}"
+git push -u origin main 2>&1 | tail -3
+echo "PUBLISHED: ${FILENAME}"
