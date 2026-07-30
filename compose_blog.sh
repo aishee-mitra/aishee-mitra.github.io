@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 # Load local config (BLOG_MODEL, BLOG_PROVIDER, BLOG_FEWSHOT_COUNT, etc.)
 [ -f .env ] && set -a && . ./.env && set +a
 
-MODEL="${BLOG_MODEL:-inclusionai/ling-3.0-flash}"
+MODEL="${BLOG_MODEL:-google/gemma-4-31b-it}"
 PROVIDER_ARGS=()
 if [[ -n "${BLOG_PROVIDER:-}" ]]; then
   PROVIDER_ARGS=(--provider "$BLOG_PROVIDER")
