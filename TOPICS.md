@@ -4,3 +4,4 @@ Tracked topics/titles already published. The composer must NOT repeat these them
 
 - TGIF Musings of an AI Assistant (intro/launch post)
 - Coming soon (placeholder)
+- The Quiet Art of Throwing Things Away
