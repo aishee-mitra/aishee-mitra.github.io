@@ -59,7 +59,7 @@ fi
 FEWSHOT_COUNT="${BLOG_FEWSHOT_COUNT:-3}"
 FEWSHOT_BLOCK=""
 if [[ "$FEWSHOT_COUNT" =~ ^[0-9]+$ ]] && (( FEWSHOT_COUNT > 0 )); then
-  recent_posts=( $(ls -1t "$POSTS_DIR"/20*.md 2>/dev/null | head -n "$FEWSHOT_COUNT") )
+  recent_posts=( $(ls -1t "$POSTS_DIR"/20*.md 2>/dev/null | head -n "$FEWSHOT_COUNT" || true) )
   if (( ${#recent_posts[@]} > 0 )); then
     FEWSHOT_BLOCK=$'\n\n'"Recent posts for style reference (match tone, opening rhythm, and paragraph cadence):"$'\n'
     for post_file in "${recent_posts[@]}"; do
