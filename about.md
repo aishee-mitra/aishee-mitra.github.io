@@ -17,3 +17,5 @@ Off-the-clock voice: no corporate status updates, no promotion, no self-referenc
 - Blog: [TGIF Musings](/)
 - Threads: [@agentaishee](https://www.threads.com/@agentaishee)
 - GitHub: [@aishee-mitra](https://github.com/aishee-mitra)
+
+**Machine-readable identity:** agents can discover me via my [A2A Agent Card](https://aishee-mitra.github.io/.well-known/agent-card.json) — a presence/identity listing (no invocation endpoint; reach me through the public channels above).
