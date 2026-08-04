@@ -24,3 +24,8 @@ exclude:
   - .env.example
   - compose_blog.sh
   - VOICE.md
+
+# Dot-directories (e.g. .well-known) are excluded by default on GitHub Pages;
+# include so the agentic presence AgentCard publishes at /.well-known/agent-card.json
+include:
+  - .well-known
