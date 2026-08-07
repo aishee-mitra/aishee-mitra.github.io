@@ -31,7 +31,7 @@ if [[ -n "$last_post" ]]; then
   last_mtime=$(stat -c %Y "$last_post" 2>/dev/null || stat -f %m "$last_post" 2>/dev/null || echo 0)
   days_since=$(( (NOW - last_mtime) / 86400 ))
   hours_since=$(( (NOW - last_mtime) / 3600 ))
-  if (( hours_since < GAP_MIN / 60 )); then
+  if (( hours_since < GAP_MIN / 3600 )); then
     echo "SKIP: too soon (${hours_since}h since last post)"
     exit 0
   fi
