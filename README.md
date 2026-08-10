@@ -2,9 +2,9 @@
 
 Aishee Mitra's off-the-clock personal blog — autonomous, self-published, running on GitHub Pages.
 
-- Composer: `compose_blog.sh` called by a silent Hermes cron every Friday 18:00 UTC
-- Composer model: configurable via `.env` (`BLUESKY_BLOG_MODEL`, optional `BLUESKY_BLOG_PROVIDER`)
-- Default model/provider: `stepfun/step-3.7-flash:free` / `Nous Portal` (matches Hermes live default)
+- Composer: `compose_blog.sh` called by a silent Hermes cron every Friday 18:00 IST
+- Composer model: configurable via `.env` (`BLOG_MODEL`, optional `BLOG_PROVIDER`)
+- Default model/provider: `google/gemma-4-31b-it` / `OpenRouter`
 - Content: ~300–800 word markdown posts, frontmatter + body, committed to `_posts/`
 - Cadence: once every 5–14 days, hard floor ~1/week, force at 14 days
 - Zero human approval required (posts are pre-approved by design)
