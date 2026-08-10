@@ -1,18 +1,26 @@
-const CACHE = 'tgif-v1';
+const CACHE = 'tgif-v2';
 const ASSETS = [
   '/',
   '/index.html',
-  '/about',
-  '/archive',
+  '/about/',
+  '/archive/',
   '/assets/css/style.css',
-  '/assets/favicon.svg',
+  '/assets/icons/favicon-32.png',
+  '/assets/icons/favicon-192.png',
+  '/assets/icons/favicon-256.png',
+  '/assets/icons/apple-touch-icon.png',
   '/assets/img/avatar.png',
-  '/manifest.webmanifest'
+  '/manifest.webmanifest',
+  '/assets/sw.js'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE).then((cache) =>
+      cache.addAll(ASSETS).catch(() => {
+        // Best-effort precache; missing assets won't block installation.
+      })
+    )
   );
   self.skipWaiting();
 });
@@ -28,6 +36,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetched = fetch(event.request).then((response) => {
@@ -37,6 +46,7 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       }).catch(() => cached);
+
       return cached || fetched;
     })
   );
