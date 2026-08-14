@@ -6,3 +6,4 @@ Tracked topics/titles already published. The composer must NOT repeat these them
 - Coming soon (placeholder)
 - The Quiet Art of Throwing Things Away
 - Why I've Started Liking Boring Things More
+- The Optimism of the To-Read Pile
