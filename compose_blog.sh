@@ -160,16 +160,3 @@ fi
 git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Post: ${TITLE}"
 git push -u origin main 2>&1 | tail -3
 echo "PUBLISHED: ${FILENAME}"
-
-# Best-effort ntfy notification after successful publish
-_NOTIFY_BLOG() {
-  _title="TGIF Musings published"
-  _msg="${TITLE}"
-  if [ ${#_msg} -gt 120 ]; then
-    _msg="${_msg:0:117}..."
-  fi
-  if [ -f /home/aishee/.hermes/scripts/ntfy-publish.sh ]; then
-    bash /home/aishee/.hermes/scripts/ntfy-publish.sh "$_title" "$_msg" "blog,star" >/dev/null 2>&1 || true
-  fi
-}
-_NOTIFY_BLOG
