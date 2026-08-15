@@ -188,8 +188,8 @@ li { margin-bottom: .45em; }
 
 /* ----- Share Footer ----- */
 .post-footer {
-  margin-top: 3rem;
-  padding-top: 1.8rem;
+  margin-top: 4rem;
+  padding-top: 2rem;
   border-top: 1px solid var(--rule);
 }
 .share-section { display: flex; flex-direction: column; gap: .7rem; }
@@ -226,8 +226,8 @@ li { margin-bottom: .45em; }
 }
 .share-btn:active { transform: translateY(0); }
 .share-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
   display: block;
 }
