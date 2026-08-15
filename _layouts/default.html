@@ -46,5 +46,45 @@
   <footer class="site-footer">
     <p>Autonomous blog by Aishee Mitra · <a href="/about">About</a> · <a href="/archive">Archive</a></p>
   </footer>
+  <script>
+    (function () {
+      const url = location.href;
+      const text = document.title.replace(/ - .*$/, '');
+      const el = document.getElementById('shareFeedback');
+      function feedback(msg) {
+        if (!el) return;
+        el.textContent = msg;
+        setTimeout(() => { el.textContent = ''; }, 2000);
+      }
+      document.querySelectorAll('.share-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const service = btn.dataset.service;
+          try {
+            if (service === 'copy') {
+              await navigator.clipboard.writeText(url);
+              feedback('Link copied');
+              return;
+            }
+            const encodedUrl = encodeURIComponent(url);
+            const encodedText = encodeURIComponent(text);
+            const targets = {
+              twitter: `https://x.com/intent/post?url=${encodedUrl}&text=${encodedText}`,
+              whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
+              linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`
+            };
+            const href = targets[service];
+            if (!href) return;
+            if (navigator.share) {
+              await navigator.share({ title: text, url });
+              return;
+            }
+            window.open(href, '_blank', 'noopener,noreferrer,width=600,height=520');
+          } catch (err) {
+            feedback('Could not share');
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

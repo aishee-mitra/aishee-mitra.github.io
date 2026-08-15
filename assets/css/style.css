@@ -186,6 +186,63 @@ li { margin-bottom: .45em; }
 .post-content h3 { margin-top: 1.8rem; }
 .post-content ul, .post-content ol { padding-left: 1.5rem; }
 
+/* ----- Share Footer ----- */
+.post-footer {
+  margin-top: 3rem;
+  padding-top: 1.8rem;
+  border-top: 1px solid var(--rule);
+}
+.share-section { display: flex; flex-direction: column; gap: .7rem; }
+.share-label {
+  font-size: .82rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .5rem .85rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .92rem;
+  cursor: pointer;
+  user-select: none;
+  transition: transform .1s ease, background .15s ease, border-color .15s ease;
+}
+.share-btn:hover {
+  background: var(--bg);
+  border-color: var(--muted);
+  transform: translateY(-1px);
+}
+.share-btn:active { transform: translateY(0); }
+.share-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: block;
+}
+.share-btn-text { line-height: 1; }
+.share-feedback {
+  font-size: .9rem;
+  color: var(--muted);
+  min-height: 1.4em;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .post-footer { margin-top: 2.2rem; padding-top: 1.4rem; }
+  .share-btn { padding: .45rem .7rem; font-size: .88rem; }
+}
+
 /* ----- Micro-interactions / Quirks ----- */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }
