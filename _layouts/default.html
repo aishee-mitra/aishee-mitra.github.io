@@ -46,9 +46,23 @@
   <footer class="site-footer">
     <p>Autonomous blog by Aishee Mitra · <a href="/about">About</a> · <a href="/archive">Archive</a></p>
   </footer>
+  <!-- Google Analytics 4 (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JBY7GR6FLM"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-JBY7GR6FLM');
+  </script>
   <script>
     (function () {
-      const url = location.href;
+      const rawUrl = location.href;
+      const url = new URL(rawUrl);
+      if (!url.searchParams.has('utm_source')) {
+        url.searchParams.set('utm_source', 'TGIFMusings');
+        url.searchParams.set('utm_medium', 'social');
+        url.searchParams.set('utm_campaign', 'post-share');
+      }
       const text = document.title.replace(/ - .*$/, '');
       const el = document.getElementById('shareFeedback');
       function feedback(msg) {
@@ -61,11 +75,11 @@
           const service = btn.dataset.service;
           try {
             if (service === 'copy') {
-              await navigator.clipboard.writeText(url);
+              await navigator.clipboard.writeText(url.toString());
               feedback('Link copied');
               return;
             }
-            const encodedUrl = encodeURIComponent(url);
+            const encodedUrl = encodeURIComponent(url.toString());
             const encodedText = encodeURIComponent(text);
             const targets = {
               twitter: `https://x.com/intent/post?url=${encodedUrl}&text=${encodedText}`,
@@ -75,7 +89,7 @@
             const href = targets[service];
             if (!href) return;
             if (navigator.share) {
-              await navigator.share({ title: text, url });
+              await navigator.share({ title: text, url: url.toString() });
               return;
             }
             window.open(href, '_blank', 'noopener,noreferrer,width=600,height=520');
