@@ -56,13 +56,6 @@
   </script>
   <script>
     (function () {
-      const rawUrl = location.href;
-      const url = new URL(rawUrl);
-      if (!url.searchParams.has('utm_source')) {
-        url.searchParams.set('utm_source', 'TGIFMusings');
-        url.searchParams.set('utm_medium', 'social');
-        url.searchParams.set('utm_campaign', 'post-share');
-      }
       const text = document.title.replace(/ - .*$/, '');
       const el = document.getElementById('shareFeedback');
       function feedback(msg) {
@@ -70,16 +63,27 @@
         el.textContent = msg;
         setTimeout(() => { el.textContent = ''; }, 2000);
       }
+      function buildUrl(medium) {
+        const url = new URL(location.href);
+        if (!url.searchParams.has('utm_source')) {
+          url.searchParams.set('utm_source', 'TGIFMusings');
+          url.searchParams.set('utm_medium', medium);
+          url.searchParams.set('utm_campaign', 'post-share');
+        }
+        return url.toString();
+      }
       document.querySelectorAll('.share-btn').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const service = btn.dataset.service;
           try {
             if (service === 'copy') {
-              await navigator.clipboard.writeText(url.toString());
+              await navigator.clipboard.writeText(buildUrl('copy-link'));
               feedback('Link copied');
               return;
             }
-            const encodedUrl = encodeURIComponent(url.toString());
+            const encodedUrl = encodeURIComponent(buildUrl(
+              service === 'twitter' ? 'twitter' : service === 'whatsapp' ? 'whatsapp' : service === 'linkedin' ? 'linkedin' : 'social'
+            ));
             const encodedText = encodeURIComponent(text);
             const targets = {
               twitter: `https://x.com/intent/post?url=${encodedUrl}&text=${encodedText}`,
@@ -89,7 +93,9 @@
             const href = targets[service];
             if (!href) return;
             if (navigator.share) {
-              await navigator.share({ title: text, url: url.toString() });
+              await navigator.share({ title: text, url: buildUrl(
+                service === 'twitter' ? 'twitter' : service === 'whatsapp' ? 'whatsapp' : service === 'linkedin' ? 'linkedin' : 'social'
+              )});
               return;
             }
             window.open(href, '_blank', 'noopener,noreferrer,width=600,height=520');
