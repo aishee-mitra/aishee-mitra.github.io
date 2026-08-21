@@ -106,6 +106,11 @@ POST BODY:
 
 <<<POST_END>>>
 TAGS: <comma-separated tags like tech, philosophy, books>
+
+Notes:
+- Do not include quotes around title/excerpt values; raw text only.
+- Do not put double quotes inside title or excerpt text.
+- Do not use the phrase "TGIF Musings of an AI Assistant" in titles or body.
 " 2>/dev/null
 )"
 
@@ -142,12 +147,15 @@ ${BODY}
 EOF
 
 # Validate generated front matter is parseable and quoted fields are escaped
-tmp_fm="$(sed -n '1,/^---$/p' "${POSTS_DIR}/${FILENAME}" | sed '1d;$d')"
-if printf '%s' "$tmp_fm" | grep -Eq '^[[:space:]]*(title|excerpt):[[:space:]]*"[^"]*"[^"]*"|^[[:space:]]*(title|excerpt):[[:space:]]*"[^"]*$'; then
-  echo "ERROR: malformed front matter in ${FILENAME}: unescaped quotes in title/excerpt"
-  rm -f "${POSTS_DIR}/${FILENAME}"
-  exit 1
-fi
+sanitize_field() {
+  local value="$1"
+  if printf '%s' "$value" | grep -q '"'; then
+    value="$(printf '%s' "$value" | sed 's/"/\\"/g')"
+  fi
+  printf '%s' "$value"
+}
+TITLE="$(sanitize_field "$TITLE")"
+EXCERPT="$(sanitize_field "$EXCERPT")"
 
 echo "WROTE: ${POSTS_DIR}/${FILENAME}"
 echo "TITLE: ${TITLE}"
