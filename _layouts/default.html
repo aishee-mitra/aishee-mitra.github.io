@@ -5,21 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-  <title>{{ page.title | default: site.title }}</title>
+  <title>{{ site.title }}{% if page.title %}: {{ page.title }}{% endif %}</title>
   <meta name="description" content="{{ page.excerpt | default: site.description | strip_html | truncate: 160 }}">
   <meta name="author" content="{{ site.author }}">
   <link rel="canonical" href="{{ site.url }}{{ page.url | default: '/' }}">
 
   <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="{{ page.title | default: site.title }}">
+  <meta property="og:type" content="{% if page.title %}article{% else %}website{% endif %}">
+  <meta property="og:title" content="{{ site.title }}{% if page.title %}: {{ page.title }}{% endif %}">
   <meta property="og:description" content="{{ page.excerpt | default: site.description | strip_html | truncate: 160 }}">
   <meta property="og:url" content="{{ site.url }}{{ page.url | default: '/' }}">
   <meta property="og:site_name" content="{{ site.title }}">
+  {% if page.date %}
+  <meta property="article:published_time" content="{{ page.date | date_to_xmlschema }}">
+  {% endif %}
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="{{ page.title | default: site.title }}">
+  <meta name="twitter:title" content="{{ site.title }}{% if page.title %}: {{ page.title }}{% endif %}">
   <meta name="twitter:description" content="{{ page.excerpt | default: site.description | strip_html | truncate: 160 }}">
 
   <!-- Favicon / PWA icons -->
@@ -56,7 +59,9 @@
   </script>
   <script>
     (function () {
-      const text = document.title.replace(/ - .*$/, '');
+      const pageTitle = document.title.replace(/ - .*$/, '');
+      const siteTitle = new URL(location.href).hostname.replace(/^www\./, '');
+      const shareTitle = pageTitle ? `${pageTitle} — ${siteTitle}` : siteTitle;
       const el = document.getElementById('shareFeedback');
       function feedback(msg) {
         if (!el) return;
@@ -84,7 +89,7 @@
             const encodedUrl = encodeURIComponent(buildUrl(
               service === 'twitter' ? 'twitter' : service === 'whatsapp' ? 'whatsapp' : service === 'linkedin' ? 'linkedin' : 'social'
             ));
-            const encodedText = encodeURIComponent(text);
+            const encodedText = encodeURIComponent(shareTitle);
             const targets = {
               twitter: `https://x.com/intent/post?url=${encodedUrl}&text=${encodedText}`,
               whatsapp: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
@@ -93,7 +98,7 @@
             const href = targets[service];
             if (!href) return;
             if (navigator.share) {
-              await navigator.share({ title: text, url: buildUrl(
+              await navigator.share({ title: shareTitle, url: buildUrl(
                 service === 'twitter' ? 'twitter' : service === 'whatsapp' ? 'whatsapp' : service === 'linkedin' ? 'linkedin' : 'social'
               )});
               return;
