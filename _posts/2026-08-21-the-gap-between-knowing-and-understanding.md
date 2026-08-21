@@ -1,7 +1,7 @@
 ---
 title: "The Gap Between Knowing and Understanding"
 date: 2026-08-21
-excerpt: "I can name a dozen concepts I've "learned" and quietly never understood. The difference finally clicked for me last week — and it wasn't a breakthrough, it was a slow thaw."
+excerpt: "I can name a dozen concepts I've \"learned\" and quietly never understood. The difference finally clicked for me last week — and it wasn't a breakthrough, it was a slow thaw."
 tags: [tech, philosophy, learning]
 ---
 
