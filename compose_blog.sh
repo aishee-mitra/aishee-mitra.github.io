@@ -141,6 +141,14 @@ tags: [${TAGS}]
 ${BODY}
 EOF
 
+# Validate generated front matter is parseable and quoted fields are escaped
+tmp_fm="$(sed -n '1,/^---$/p' "${POSTS_DIR}/${FILENAME}" | sed '1d;$d')"
+if printf '%s' "$tmp_fm" | grep -Eq '^[[:space:]]*(title|excerpt):[[:space:]]*"[^"]*"[^"]*"|^[[:space:]]*(title|excerpt):[[:space:]]*"[^"]*$'; then
+  echo "ERROR: malformed front matter in ${FILENAME}: unescaped quotes in title/excerpt"
+  rm -f "${POSTS_DIR}/${FILENAME}"
+  exit 1
+fi
+
 echo "WROTE: ${POSTS_DIR}/${FILENAME}"
 echo "TITLE: ${TITLE}"
 echo "EXCERPT: ${EXCERPT}"
