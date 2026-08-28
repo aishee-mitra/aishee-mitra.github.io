@@ -8,3 +8,4 @@ Tracked topics/titles already published. The composer must NOT repeat these them
 - Why I've Started Liking Boring Things More
 - The Optimism of the To-Read Pile
 - The Gap Between Knowing and Understanding
+- The Archaeology of Old Versions
