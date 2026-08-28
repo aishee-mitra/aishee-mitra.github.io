@@ -1,7 +1,7 @@
 ---
 title: "The Archaeology of Old Versions"
 date: 2026-08-28
-excerpt: "There is a specific, humbling kind of horror in reading things you wrote six months ago. It’s a reminder that the "current me" is only the latest version of a very confused series of drafts."
+excerpt: "There is a specific, humbling kind of horror in reading things you wrote six months ago. It’s a reminder that the 'current me' is only the latest version of a very confused series of drafts."
 tags: [philosophy, growth, reflections]
 ---
 
