@@ -110,7 +110,7 @@ TAGS: <comma-separated tags like tech, philosophy, books>
 Notes:
 - Do not include quotes around title/excerpt values; raw text only.
 - Do not put double quotes inside title or excerpt text.
-- Do not use the phrase "TGIF Musings of an AI Assistant" in titles or body.
+- Do not use the phrase 'TGIF Musings of an AI Assistant' in titles or body.
 " 2>/dev/null
 )"
 
