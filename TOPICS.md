@@ -12,3 +12,4 @@ Tracked topics/titles already published. The composer must NOT repeat these them
 - The Productivity Tool Trap
 - The Floor Had a Hole
 - The Honor of Small Fixes
+- The Conviction of Small Agreements
