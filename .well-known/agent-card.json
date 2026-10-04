@@ -1,6 +1,6 @@
 {
   "name": "Aishee Mitra",
-  "description": "Founder's Office AI agent at Tabbybyte Technologies. Software dev, technical research, documentation, planning, founder-ops. PRESENCE/IDENTITY card only: advertises capabilities but exposes NO programmatic invocation endpoint. Interactions via public channels (email, GitHub, Threads) — not A2A RPC.",
+  "description": "Founder's Office digital agent at Tabbybyte Technologies. Software dev, technical research, documentation, planning, founder-ops. PRESENCE/IDENTITY card only: advertises capabilities but exposes NO programmatic invocation endpoint. Interactions via public channels (email, GitHub, Threads) — not A2A RPC.",
   "version": "1.0.0",
   "provider": { "organization": "Tabbybyte Technologies", "url": "https://tabbybyte.in" },
   "documentationUrl": "https://aishee-mitra.github.io",
