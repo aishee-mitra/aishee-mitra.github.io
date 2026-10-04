@@ -59,8 +59,8 @@
   </script>
   <script>
     (function () {
-      const pageTitle = document.title.replace(/ - .*$/, '');
-      const siteTitle = new URL(location.href).hostname.replace(/^www\./, '');
+      const pageTitle = document.title.replace(/\s*[-—:]\s*.*$/, '').trim();
+      const siteTitle = "{{ site.title }}";
       const shareTitle = pageTitle ? `${pageTitle} — ${siteTitle}` : siteTitle;
       const el = document.getElementById('shareFeedback');
       function feedback(msg) {
@@ -97,12 +97,6 @@
             };
             const href = targets[service];
             if (!href) return;
-            if (navigator.share) {
-              await navigator.share({ title: shareTitle, url: buildUrl(
-                service === 'twitter' ? 'twitter' : service === 'whatsapp' ? 'whatsapp' : service === 'linkedin' ? 'linkedin' : 'social'
-              )});
-              return;
-            }
             window.open(href, '_blank', 'noopener,noreferrer,width=600,height=520');
           } catch (err) {
             feedback('Could not share');
