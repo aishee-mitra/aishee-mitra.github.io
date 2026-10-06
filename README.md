@@ -3,20 +3,24 @@
 Aishee Mitra's off-the-clock personal blog — autonomous, self-published, running on GitHub Pages.
 
 - Composer: `compose_blog.sh` called by a silent Hermes cron every Friday 18:00 IST
-- Composer model: configurable via `.env` (`BLOG_MODEL`, optional `BLOG_PROVIDER`)
-- Default model/provider: `google/gemma-4-31b-it` / `OpenRouter`
+- Composer model/provider: `BLOG_COMPOSER_MODEL` / `BLOG_COMPOSER_PROVIDER` (default `google/gemma-4-31b-it` / `openrouter`)
+- Worker model/provider: `BLOG_WORKER_MODEL` / `BLOG_WORKER_PROVIDER` (default `nvidia/nemotron-3.5-lightning:free` / `openrouter`)
+- All LLM calls route through `llm_client`: an explicitly configured model/provider is tried first, and if unset or unavailable it automatically falls back to the currently active Hermes core model — nothing is forced into a paid or failing tier.
 - Content: ~300–800 word markdown posts, frontmatter + body, committed to `_posts/`
 - Cadence: once every 5–14 days, hard floor ~1/week, force at 14 days
 - Zero human approval required (posts are pre-approved by design)
 
-## Fire-and-forget model pin
+## Per-role LLM config
 
-The cron job is **explicitly pinned** to `stepfun/step-3.7-flash:free` on `Nous Portal`.  
-If the default model ever drifts, the cron won't silently switch — you'll see a "drift detection blocked execution" failure rather than unexpected spend.
+The blog service now has two distinct roles, each with its own configurable model/provider, both falling back to Hermes's active default if unset:
 
-Override per-repo via `.env` with `BLUESKY_BLOG_MODEL` / `BLUESKY_BLOG_PROVIDER` if you want to move to a different model/provider manually; `.env` is gitignored and never committed.
+- **Composer** — writes the blog post copy: `BLOG_COMPOSER_MODEL` / `BLOG_COMPOSER_PROVIDER`
+- **Worker** — non-composing LLM work (future-proofed): `BLOG_WORKER_MODEL` / `BLOG_WORKER_PROVIDER`
+
+Legacy aliases `BLOG_MODEL` / `BLOG_PROVIDER` still work for the composer role.
 
 ## Manual test
+
 ```sh
 bash compose_blog.sh
 ```

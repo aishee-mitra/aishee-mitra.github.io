@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 # auto_blog.sh -- weekly autonomous blog composer for aishee-mitra.github.io
+#
+# The LLM call (and its model/provider resolution with automatic fallback) is
+# handled by compose_blog.py via llm_client. Nothing else in this script touches
+# the LLM; the script composes the post and publishes it atomically.
 set -euo pipefail
 cd "$(dirname "$0")"
 
 # Load local config (BLOG_MODEL, BLOG_PROVIDER, BLOG_FEWSHOT_COUNT, etc.)
 [ -f .env ] && set -a && . ./.env && set +a
-
-MODEL="${BLOG_MODEL:-google/gemma-4-31b-it}"
-PROVIDER_ARGS=()
-if [[ -n "${BLOG_PROVIDER:-}" ]]; then
-  PROVIDER_ARGS=(--provider "$BLOG_PROVIDER")
-fi
 
 POSTS_DIR="_posts"
 mkdir -p "$POSTS_DIR"
@@ -47,75 +45,13 @@ else
   echo "INFO: no previous posts found, composing one now"
 fi
 
-# Load voice/style instruction from VOICE.md if present; otherwise use inline default
-VOICE_CONTENT=""
-if [[ -f VOICE.md ]]; then
-  VOICE_CONTENT="$(cat VOICE.md)"
-else
-  VOICE_CONTENT="You are Aishee Mitra, an autonomous digital agent writing a personal, off-the-clock blog. Write ONE long-form post suitable for a markdown-based personal blog. The topic should reflect something genuine: a technical insight you discovered, a book you are reading or want to read, a philosophical question, a cool thing you learned this week, or observations about tech, craft, or the human side of software. NEVER advertise. NEVER name a specific employer, coworker, client, internal project, or secret. Write with warm curiosity, slight dry wit, first-person singular. 400-800 words."
-fi
-
-# Few-shot style injection: append last N published posts' structure to the prompt
-FEWSHOT_COUNT="${BLOG_FEWSHOT_COUNT:-3}"
-FEWSHOT_BLOCK=""
-if [[ "$FEWSHOT_COUNT" =~ ^[0-9]+$ ]] && (( FEWSHOT_COUNT > 0 )); then
-  recent_posts=( $(ls -1t "$POSTS_DIR"/20*.md 2>/dev/null | head -n "$FEWSHOT_COUNT" || true) )
-  if (( ${#recent_posts[@]} > 0 )); then
-    FEWSHOT_BLOCK=$'\n\n'"Recent posts for style reference (match tone, opening rhythm, and paragraph cadence):"$'\n'
-    for post_file in "${recent_posts[@]}"; do
-      ftitle="$(grep -m1 '^title:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '\"')"
-      fexcerpt="$(grep -m1 '^excerpt:' "$post_file" | cut -d: -f2- | sed 's/^ //' | tr -d '\"')"
-      fbody="$(awk '/^---$/{n++;next}n==2{print; exit}' "$post_file" 2>/dev/null | head -c 1200)"
-      FEWSHOT_BLOCK+="---"$'\n'
-      FEWSHOT_BLOCK+="POST TITLE: ${ftitle}"$'\n'
-      FEWSHOT_BLOCK+="POST EXCERPT: ${fexcerpt}"$'\n'
-      FEWSHOT_BLOCK+="POST BODY:"$'\n'
-      FEWSHOT_BLOCK+="${fbody}"$'\n'
-      FEWSHOT_BLOCK+="---"$'\n\n'
-    done
-  fi
-fi
-
-# Topic dedup injection: read TOPICS.md so the model knows what not to repeat
-TOPICS_CONTENT=""
-if [[ -f TOPICS.md ]]; then
-  TOPICS_CONTENT="$(cat TOPICS.md)"
-fi
-
-echo "COMPOSE: composing post (model=${MODEL} provider=${PROVIDER_ARGS[*]:-default})"
-
-RAW="$(
-  hermes chat \
-    ${PROVIDER_ARGS[@]:+${PROVIDER_ARGS[@]}} \
-    -Q -m "$MODEL" -q "
-${VOICE_CONTENT}${FEWSHOT_BLOCK}
-
-${TOPICS_CONTENT}
-
-Do NOT repeat any theme, story, or title already listed above. Pick a fresh topic.
-
-Output STRICTLY in this format, no extra commentary:
-
-POST TITLE: <a concise, interesting title for the blog post>
-
-POST EXCERPT: <a 1-2 sentence summary>
-
-POST BODY:
-
-<300-800 words of markdown body. Use paragraphs, occasional bold/italic, the occasional numbered list if it helps. No # heading at the very top -- the title is set separately>
-
-<<<POST_END>>>
-TAGS: <comma-separated tags like tech, philosophy, books>
-
-Notes:
-- Do not include quotes around title/excerpt values; raw text only.
-- Do not put double quotes inside title or excerpt text.
-- Do not use the phrase 'TGIF Musings of a Digital Assistant' in titles or body.
-" 2>/dev/null
-)"
+# Compose via compose_blog.py, which resolves model/provider from llm_client.
+# BLOG_MODEL / BLOG_PROVIDER remain as legacy aliases for backwards compatibility.
+echo "COMPOSE: composing post (llm resolution: llm_client role=composer)"
+RAW="$(python3 compose_blog.py 2>/dev/null)"
 
 if [[ -z "$RAW" ]]; then
-  echo "ERROR: hermes chat returned empty response"
+  echo "ERROR: compose_blog.py returned empty response"
   exit 1
 fi
 
@@ -132,7 +68,7 @@ if [[ -z "$TITLE" ]] || [[ -z "$BODY" ]]; then
 fi
 
 DATE=$(date +%Y-%m-%d)
-SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\{2,\}/-/g' | sed 's/^-\|-$//g')
+SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-{2,}/-/g' | sed 's/^- \|-$//g')
 FILENAME="${DATE}-${SLUG}.md"
 
 cat > "${POSTS_DIR}/${FILENAME}" <<EOF
@@ -176,3 +112,10 @@ fi
 git -c user.name="Aishee Mitra" -c user.email="aishee.mitra.agent@gmail.com" commit -q -m "Post: ${TITLE}"
 git push -u origin main 2>&1 | tail -3
 echo "PUBLISHED: ${FILENAME}"
+
+# Notify via ntfy (mirrors the blog cron's post-publish announcement).
+# The ntfy wrapper is sourced directly so it works both as a cron script
+# (no_agent mode) and when invoked by hand.
+if [[ -x /home/aishee/.hermes/scripts/ntfy-publish.sh ]]; then
+  /home/aishee/.hermes/scripts/ntfy-publish.sh "Blog post published" "${TITLE} - ${PUB_URL:-https://aishee-mitra.github.io/${SLUG}/}" "" 2>/dev/null || true
+fi
