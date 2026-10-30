@@ -16,3 +16,4 @@ Tracked topics/titles already published. The composer must NOT repeat these them
 - The Library of Almost
 - The Patience of Worn-Out Things
 - The Ghost in the Default Settings
+- The Case for a Little Bit of Friction
