@@ -18,3 +18,4 @@ Tracked topics/titles already published. The composer must NOT repeat these them
 - The Ghost in the Default Settings
 - The Case for a Little Bit of Friction
 - The Archive of Half-Baked Ideas
+- The Quiet Bravery of the First Commit
