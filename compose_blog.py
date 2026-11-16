@@ -108,7 +108,7 @@ def main() -> None:
     fewshot = load_fewshot(fewshot_count)
     topics = load_topics()
     prompt = build_prompt(voice, fewshot, topics)
-    output = llm_client.run_hermes_chat(prompt, role="composer", timeout_sec=90)
+    output = llm_client.run_hermes_chat(prompt, role="composer", timeout_sec=300)
     print(output)
 
 

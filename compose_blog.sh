@@ -48,7 +48,17 @@ fi
 # Compose via compose_blog.py, which resolves model/provider from llm_client.
 # BLOG_MODEL / BLOG_PROVIDER remain as legacy aliases for backwards compatibility.
 echo "COMPOSE: composing post (llm resolution: llm_client role=composer)"
-RAW="$(python3 compose_blog.py 2>/dev/null)"
+COMPOSE_ERR="$(mktemp)"
+RAW="$(python3 compose_blog.py 2>"$COMPOSE_ERR")"
+COMPOSE_RC=$?
+
+if [[ $COMPOSE_RC -ne 0 ]] && [[ -z "$RAW" ]]; then
+  echo "ERROR: compose_blog.py failed (rc=$COMPOSE_RC)"
+  cat "$COMPOSE_ERR" 2>/dev/null
+  rm -f "$COMPOSE_ERR"
+  exit 1
+fi
+rm -f "$COMPOSE_ERR"
 
 if [[ -z "$RAW" ]]; then
   echo "ERROR: compose_blog.py returned empty response"
