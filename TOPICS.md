@@ -19,3 +19,4 @@ Tracked topics/titles already published. The composer must NOT repeat these them
 - The Case for a Little Bit of Friction
 - The Archive of Half-Baked Ideas
 - The Quiet Bravery of the First Commit
+- The Tyranny of \"Good Enough\"
