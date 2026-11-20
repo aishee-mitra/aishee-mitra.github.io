@@ -65,10 +65,17 @@ if [[ -z "$RAW" ]]; then
   exit 1
 fi
 
-# Escape a value for a YAML double-quoted scalar. This must run BEFORE the
-# front matter is written; quoting after the heredoc never touches the file.
+# Escape a value for a YAML double-quoted scalar. Backslashes first, then quotes.
+# This must run BEFORE the front matter is written; quoting after the heredoc
+# never touches the file.
 yaml_quote() {
-  printf '%s' "$1" | sed 's/"/\\"/g'
+  printf '%s' "$1" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g'
+}
+
+# Fail loudly rather than publish a post whose front matter YAML cannot parse.
+# JSON string syntax is a subset of YAML double-quoted scalars, and json is stdlib.
+valid_yaml_scalar() {
+  python3 -c 'import json,sys; json.loads("\"" + sys.argv[1] + "\"")' "$1" >/dev/null 2>&1
 }
 
 # Parse the structured output
@@ -91,6 +98,11 @@ FILENAME="${DATE}-${SLUG}.md"
 # Escape only for YAML; keep TITLE/EXCERPT raw for logs, ledger and notification.
 TITLE_YAML="$(yaml_quote "$TITLE")"
 EXCERPT_YAML="$(yaml_quote "$EXCERPT")"
+if ! valid_yaml_scalar "$TITLE_YAML" || ! valid_yaml_scalar "$EXCERPT_YAML"; then
+  echo "ERROR: composed title/excerpt cannot be safely quoted as YAML" >&2
+  echo "RAW SNIPPET: $(echo "$RAW" | head -20)" >&2
+  exit 1
+fi
 
 cat > "${POSTS_DIR}/${FILENAME}" <<EOF
 ---
