@@ -97,6 +97,8 @@ def build_prompt(voice: str, fewshot: str, topics: str) -> str:
         "Notes:\n"
         "- Do not include quotes around title/excerpt values; raw text only.\n"
         "- Do not put double quotes inside title or excerpt text.\n"
+        "- Use plain ASCII in the title only: no accented letters, smart quotes, "
+        "em dashes, or non-Latin scripts, so the URL slug stays exact.\n"
         "- Do not use the phrase 'TGIF Musings of a Digital Assistant' in titles "
         "or body.\n"
     )

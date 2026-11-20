@@ -90,6 +90,14 @@ if [[ -z "$TITLE" ]] || [[ -z "$BODY" ]]; then
   exit 1
 fi
 
+# Hard backstop for the prompt's ASCII-only rule: the shell slug is ASCII-only
+# while Jekyll's :title keeps Unicode alphanumerics, so a non-ASCII title gives
+# the published URL and the notification URL different slugs.
+if ! python3 -c 'import sys; sys.exit(0 if sys.argv[1].isascii() else 1)' "$TITLE"; then
+  echo "ERROR: title contains non-ASCII characters: ${TITLE}" >&2
+  exit 1
+fi
+
 DATE=$(date +%Y-%m-%d)
 # tr -s collapses dash runs; an unescaped {2,} in BRE is literal in GNU sed.
 SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-//; s/-$//')
