@@ -7,6 +7,27 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# One failure notification path, mirroring the success ntfy at the end of this
+# script. An EXIT trap cannot suppress or change the real exit status; it only
+# observes it, so callers still see the genuine failure code.
+NTFY_PUBLISH="/home/aishee/.hermes/scripts/ntfy-publish.sh"
+FAIL_REASON=""
+fail() {
+  FAIL_REASON="$1"
+  exit 1
+}
+notify_failure() {
+  local rc="$1"
+  [[ "$rc" -eq 0 ]] && return 0
+  local msg="Blog composer failed (exit ${rc})."
+  [[ -n "$FAIL_REASON" ]] && msg="${msg} ${FAIL_REASON}"
+  msg="${msg} See cron artifact: ~/.hermes/cron/output/fcb2526b0299/"
+  if [[ -x "$NTFY_PUBLISH" ]]; then
+    "$NTFY_PUBLISH" "Blog post FAILED" "$msg" "warning" >/dev/null 2>&1 || true
+  fi
+}
+trap 'notify_failure $?' EXIT
+
 # Load local config (BLOG_MODEL, BLOG_PROVIDER, BLOG_FEWSHOT_COUNT, etc.)
 [ -f .env ] && set -a && . ./.env && set +a
 
@@ -56,13 +77,13 @@ if [[ $COMPOSE_RC -ne 0 ]] && [[ -z "$RAW" ]]; then
   echo "ERROR: compose_blog.py failed (rc=$COMPOSE_RC)"
   cat "$COMPOSE_ERR" 2>/dev/null
   rm -f "$COMPOSE_ERR"
-  exit 1
+  fail "compose_blog.py failed (rc=${COMPOSE_RC})"
 fi
 rm -f "$COMPOSE_ERR"
 
 if [[ -z "$RAW" ]]; then
   echo "ERROR: compose_blog.py returned empty response"
-  exit 1
+  fail "compose_blog.py returned empty response"
 fi
 
 # Escape a value for a YAML double-quoted scalar. Backslashes first, then quotes.
@@ -87,7 +108,7 @@ TAGS="$(echo "$RAW" | grep -i '^TAGS:' | cut -d: -f2- | sed 's/^ //')"
 if [[ -z "$TITLE" ]] || [[ -z "$BODY" ]]; then
   echo "ERROR: failed to parse composed post (title_len=${#TITLE} body_len=${#BODY})"
   echo "RAW SNIPPET: $(echo "$RAW" | head -20)"
-  exit 1
+  fail "failed to parse composed post (title_len=${#TITLE} body_len=${#BODY})"
 fi
 
 # Hard backstop for the prompt's ASCII-only rule: the shell slug is ASCII-only
@@ -95,7 +116,7 @@ fi
 # the published URL and the notification URL different slugs.
 if ! python3 -c 'import sys; sys.exit(0 if sys.argv[1].isascii() else 1)' "$TITLE"; then
   echo "ERROR: title contains non-ASCII characters: ${TITLE}" >&2
-  exit 1
+  fail "title contains non-ASCII characters: ${TITLE}"
 fi
 
 DATE=$(date +%Y-%m-%d)
@@ -109,7 +130,7 @@ EXCERPT_YAML="$(yaml_quote "$EXCERPT")"
 if ! valid_yaml_scalar "$TITLE_YAML" || ! valid_yaml_scalar "$EXCERPT_YAML"; then
   echo "ERROR: composed title/excerpt cannot be safely quoted as YAML" >&2
   echo "RAW SNIPPET: $(echo "$RAW" | head -20)" >&2
-  exit 1
+  fail "composed title/excerpt cannot be safely quoted as YAML"
 fi
 
 cat > "${POSTS_DIR}/${FILENAME}" <<EOF
