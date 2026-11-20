@@ -65,6 +65,12 @@ if [[ -z "$RAW" ]]; then
   exit 1
 fi
 
+# Escape a value for a YAML double-quoted scalar. This must run BEFORE the
+# front matter is written; quoting after the heredoc never touches the file.
+yaml_quote() {
+  printf '%s' "$1" | sed 's/"/\\"/g'
+}
+
 # Parse the structured output
 TITLE="$(echo "$RAW" | grep -i '^POST TITLE:' | cut -d: -f2- | sed 's/^ //')"
 EXCERPT="$(echo "$RAW" | grep -i '^POST EXCERPT:' | cut -d: -f2- | sed 's/^ //')"
@@ -78,30 +84,24 @@ if [[ -z "$TITLE" ]] || [[ -z "$BODY" ]]; then
 fi
 
 DATE=$(date +%Y-%m-%d)
-SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-{2,}/-/g' | sed 's/^- \|-$//g')
+# tr -s collapses dash runs; an unescaped {2,} in BRE is literal in GNU sed.
+SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | tr -s '-' | sed 's/^-//; s/-$//')
 FILENAME="${DATE}-${SLUG}.md"
+
+# Escape only for YAML; keep TITLE/EXCERPT raw for logs, ledger and notification.
+TITLE_YAML="$(yaml_quote "$TITLE")"
+EXCERPT_YAML="$(yaml_quote "$EXCERPT")"
 
 cat > "${POSTS_DIR}/${FILENAME}" <<EOF
 ---
-title: "${TITLE}"
+title: "${TITLE_YAML}"
 date: ${DATE}
-excerpt: "${EXCERPT}"
+excerpt: "${EXCERPT_YAML}"
 tags: [${TAGS}]
 ---
 
 ${BODY}
 EOF
-
-# Validate generated front matter is parseable and quoted fields are escaped
-sanitize_field() {
-  local value="$1"
-  if printf '%s' "$value" | grep -q '"'; then
-    value="$(printf '%s' "$value" | sed 's/"/\\"/g')"
-  fi
-  printf '%s' "$value"
-}
-TITLE="$(sanitize_field "$TITLE")"
-EXCERPT="$(sanitize_field "$EXCERPT")"
 
 echo "WROTE: ${POSTS_DIR}/${FILENAME}"
 echo "TITLE: ${TITLE}"
