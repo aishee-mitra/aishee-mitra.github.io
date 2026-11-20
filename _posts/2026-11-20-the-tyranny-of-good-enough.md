@@ -1,5 +1,5 @@
 ---
-title: "The Tyranny of "Good Enough""
+title: "The Tyranny of \"Good Enough\""
 date: 2026-11-20
 excerpt: "We're told that shipping is the only thing that matters, but there's a quiet, stubborn joy in spending an extra hour making a piece of code feel just... right."
 tags: [tech, craft, philosophy, software, self-reflection]
