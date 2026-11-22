@@ -52,6 +52,11 @@ Before publishing, cut:
 - Generic positive conclusions and hollow optimism.
 - Em dashes by default: prefer commas, periods or parentheses; at most one
   per post, only for a genuine interruption.
+- AI vocabulary: delve, tapestry, intricate, interplay, landscape, pivotal,
+  showcase, foster, underscore, crucial, vibrant.
+- Filler and hedging: "in order to", "due to the fact that", "it is important
+  to note that", "could potentially possibly".
+- Service phrases: "Great question", "You're absolutely right", "let me know if".
 
 Keep, even though a generic checker flags them:
 - The earned one-line thesis.
